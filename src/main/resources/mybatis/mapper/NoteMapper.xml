@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.wxf.dao.NoteDao">
+	<!-- 
+		id:要求唯一
+		parameterType:参数类型，这儿填写
+				实体类的完整的名字。
+	 -->
+	<select id="findNoteByNoteId" parameterType="string" resultType="map">
+		select 
+			cn_note_title as title,
+			cn_note_body as body
+		from
+			cn_note
+		where
+			cn_note_id = #{noteId}
+	</select>
+	<insert id="addNote" parameterType="com.wxf.domain.Note" >
+		INSERT INTO cn_note(
+			cn_note_id,
+			cn_notebook_id,
+			cn_user_id,
+			cn_note_status_id,
+			cn_note_type_id,
+			cn_note_title,
+			cn_note_body,
+			cn_note_create_time,
+			cn_note_last_modify_time
+		) VALUES (
+			#{noteId},
+			#{notebookId},
+			#{userId},
+			#{statusId},
+			#{typeId},
+			#{title},
+			#{body},
+			#{createTime},
+			#{lastTime}
+		)
+	</insert>
+	
+	<update id="upNotebookIdbyNoteId" parameterType="string">
+		update 
+			cn_note
+		set 
+			cn_notebook_id=#{notebookId}
+		where 
+			cn_note_id=#{noteId}
+	</update>
+	<select id="findNotes"  resultType="map">
+		select 
+			cn_note_title as title,
+			cn_note_body as body
+		from
+			cn_note
+		where
+		<!-- 如果最后有and，会去掉and -->
+			<trim suffixOverrides="and"> 
+			<if test="userId !=null">
+				cn_user_id = #{userId}  and
+			</if>
+			<if test="notebookId !=null">
+				cn_notebook_id =#(notebookId) and
+			</if>
+			<if test="cn_note_status_id!=null">
+				cn_note_status_id=#{statusId}
+			</if>
+			</trim>
+	</select>
+	<delete id="deleteNotes">
+		delete from cn_note
+		where 
+			cn_note_id in
+			<foreach collection="ids" item="id" open="(" separator="," close=")">
+				#{id}
+			</foreach>
+	
+	</delete>
+	<update id="saveNote">
+		UPDATE
+			cn_note
+		SET
+			cn_note_body=#{body},
+			cn_note_title=#{title}
+		where
+			cn_note_id=#{noteId}
+	</update>
+	<update id="tombstoneNote">
+		UPDATE
+			cn_note
+		SET
+			cn_note_status_id=0
+		where
+			cn_note_id=#{noteId}
+	</update>
+	<select id="showTombstoneNote" resultType="Map" parameterType="String">
+		select
+			cn_note_title as title,
+			cn_note_id as noteId
+		from
+			cn_note
+		where
+			cn_user_id = #{userId} and
+			cn_note_status_id = 0
+
+	</select>
+	<!--模糊查询-->
+	<select id="searchNotes" resultType="Map" parameterType="String">
+		SELECT
+			cn_note_title as title,
+			cn_note_body as body,
+			cn_note_id as noteId
+		FROM
+			cn_note
+		WHERE
+			cn_user_id = #{userId} AND cn_note_body LIKE concat(concat('%',#{searchTxt}),'%') OR cn_note_title LIKE concat(concat('%',#{searchTxt}),'%')
+	</select>
+</mapper>

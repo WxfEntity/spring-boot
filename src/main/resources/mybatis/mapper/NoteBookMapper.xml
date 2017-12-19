@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.wxf.dao.NoteBookDao">
+	<!-- 
+		id:要求唯一
+		parameterType:参数类型，这儿填写
+				实体类的完整的名字。
+	 -->
+	 <!-- 	在插入时读取自动生成ID
+	 		打开userGenneratedKeys="ture" 可以读取自增ID
+	 		设置keyProperty="id"告诉MyBatis将读取结果赋值
+	 		给参数person对象的id属性
+	  -->
+	
+	<select id="findNoteByNotebookId" parameterType="string" resultType="map">
+		select 
+			cn_note_title as title,
+			cn_note_id as noteId
+		from
+			cn_note
+		where
+			cn_notebook_id=#{notebookId} AND
+			cn_note_status_id=1
+	</select>
+	<insert id="addNote" parameterType="com.wxf.domain.Note">
+		INSERT INTO cn_note(
+			cn_note_id,
+			cn_notebook_id,
+			cn_user_id,
+			cn_note_status_id,
+			cn_note_type_id,
+			cn_note_title,
+			cn_note_body,
+			cn_note_create_time,
+			cn_note_last_modify_time
+		) VALUES (
+			#{noteId},
+			#{notebookId},
+			#{userId},
+			#{statusId},
+			#{typeId},
+			#{title},
+			#{body},
+			#{createTime},
+			#{lastTime}
+		)
+	</insert>
+	
+	<update id="upNotebookIdbyNoteId" parameterType="string">
+		update 
+			cn_note
+		set 
+			cn_notebook_id=#{notebookId}
+		where 
+			cn_note_id=#{noteId}
+	</update>
+	<select id="findNotes"  resultType="map">
+		select 
+			cn_note_title as title,
+			cn_note_body as body
+		from
+			cn_note
+		where
+		<!-- 如果最后有and，会去掉and -->
+			<trim suffixOverrides="and"> 
+			<if test="userId !=null">
+				cn_user_id = #{userId}  and
+			</if>
+			<if test="notebookId !=null">
+				cn_notebook_id =#(notebookId) and
+			</if>
+			<if test="cn_note_status_id!=null">
+				cn_note_status_id=#{statusId}
+			</if>
+			</trim>
+	</select>
+	<delete id="deleteNotes">
+		delete from cn_note
+		where 
+			cn_note_id in
+			<foreach collection="ids" item="id" open="(" separator="," close=")">
+				#{id}
+			</foreach>
+	
+	</delete>
+	<select id="countNotebookById"
+			parameterType="string"
+			resultType="int">
+		select
+		count(*) as cnt
+		from
+		cn_notebook
+		where
+		cn_notebook_id = #{notebookId}
+	</select>
+	<select id="findNoteBookByPage"
+			resultType="map">
+		select
+		cn_notebook_id as id,
+		cn_notebook_name as name
+		from
+		${table}
+		where
+		cn_user_id = #{userId}
+		order by
+		cn_notebook_createtime desc
+		limit #{start}, #{pageSize}
+	</select>
+	<select id="findNoteBookByUserId" resultType="map">
+		SELECT
+			cn_notebook_name as name,
+			cn_notebook_id as id
+		FROM
+		 	cn_notebook
+		WHERE
+			cn_user_id=#{userId}
+	</select>
+	<insert id="addNoteBook" parameterType="com.wxf.domain.NoteBook">
+		INSERT INTO cn_notebook(
+			cn_notebook_id,
+			cn_user_id,
+			cn_notebook_name,
+			cn_notebook_createtime
+		) VALUES (
+			#{noteBookId},
+			#{userId},
+			#{name},
+			#{createTime}
+		)
+	</insert>
+	<insert id="initUser" parameterType="com.wxf.domain.NoteBook">
+		INSERT INTO cn_notebook(
+		cn_notebook_id,
+		cn_user_id,
+		cn_notebook_name,
+		cn_notebook_createtime
+		) VALUES (
+		#{noteBookId},
+		#{userId},
+		#{name},
+		#{createTime}
+		)
+	</insert>
+</mapper>
